@@ -1,0 +1,14 @@
+---
+   - name: Install requirements
+     hosts: role_app
+     become: true
+     roles:
+       - requirements
+
+   - name: Deploy Flask application
+     hosts: role_app
+     vars:
+       workspace: "{{ lookup('env', 'WORKSPACE') }}"
+     roles:
+       - flask-app
+   

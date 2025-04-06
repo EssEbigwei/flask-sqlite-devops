@@ -1,0 +1,66 @@
+---
+- name: Deploy Flask Application
+  become: true
+
+- name: Create app directory
+  file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+- name: Copy application files
+  copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+  loop:
+        - { src: "{{ workspace }}/app/app.py", dest: "{{ app_dir }}/app.py" }
+        - { src: "{{ workspace }}/app/requirements.txt", dest: "{{ app_dir }}/requirements.txt" }
+
+- name: Create templates directory
+  file:
+        path: "{{ app_dir }}/templates"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+- name: Copy template file
+  copy:
+        src: "{{ workspace }}/app/templates/index.html"
+        dest: "{{ app_dir }}/templates/index.html"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+- name: Initialize SQLite database
+  shell: |
+        sqlite3 {{ app_dir }}/data.db < {{ workspace }}/init_db.sql
+        chown {{ app_user }}:{{ app_group }} {{ app_dir }}/data.db
+  args:
+        creates: "{{ app_dir }}/data.db"
+
+- name: Install Python dependencies
+  pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        state: present
+
+- name: Create systemd service file for Flask app
+  template:
+        src: flask-app.service.j2
+        dest: /etc/systemd/system/flask-app.service
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: Enable and restart Flask app service
+  systemd:
+        name: flask-app
+        enabled: true
+        state: restarted
+        daemon_reload: true
+...
