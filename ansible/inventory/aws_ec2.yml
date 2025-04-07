@@ -1,0 +1,10 @@
+---
+ plugin: aws_ec2
+ regions: 
+     - us-east-2
+ filters:
+   tag:Project: flask-sqlite
+   instance-state-name: running
+   keyed_groups:
+     - key: tags.Role
+       prefix: role

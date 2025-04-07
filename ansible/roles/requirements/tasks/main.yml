@@ -1,0 +1,17 @@
+---
+- name: Install Python and required packages
+  become: true
+  package:
+    name:
+      - python3
+      - python3-pip
+      - python3-devel
+      - sqlite
+    state: present
+
+- name: Ensure pip is updated
+  become: true
+  pip:
+    name: pip
+    state: latest
+   
